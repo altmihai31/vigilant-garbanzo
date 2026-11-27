@@ -12,15 +12,17 @@ struct HomeView: View {
             ZStack(alignment: .bottom) {
                 Color.black.ignoresSafeArea()
                 grid
-                // A gentle fade to black behind the bottom buttons, running all the way to the screen edge.
-                LinearGradient(stops: [.init(color: .black.opacity(0), location: 0),
-                                       .init(color: .black.opacity(0.6), location: 0.5),
-                                       .init(color: .black.opacity(0.9), location: 1)],
-                               startPoint: .top, endPoint: .bottom)
-                    .frame(height: 120)
+                // Fade to solid black behind the bottom buttons, down past the home indicator.
+                EdgeFade(edge: .bottom)
+                    .frame(height: 140)
                     .ignoresSafeArea(edges: .bottom)
-                    .allowsHitTesting(false)
                 bottomBar
+            }
+            // The same fade at the top, behind the status bar and the filter button.
+            .overlay(alignment: .top) {
+                EdgeFade(edge: .top)
+                    .frame(height: 70)
+                    .ignoresSafeArea(edges: .top)
             }
             .overlay(alignment: .topTrailing) {
                 FilterMenuButton()
@@ -273,5 +275,32 @@ struct ToastView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .accessibilityIdentifier("toast")
         }
+    }
+}
+
+/// A progressive blur at the screen edge: content blurs more and darkens as it nears the top or bottom,
+/// like the bars in Apple's own apps. Two materials, each masked by a gradient, make the blur ramp up.
+struct EdgeFade: View {
+    let edge: VerticalEdge
+
+    private var start: UnitPoint { edge == .top ? .top : .bottom }
+    private var end: UnitPoint { edge == .top ? .bottom : .top }
+
+    private func mask(_ stops: [Gradient.Stop]) -> LinearGradient {
+        LinearGradient(stops: stops, startPoint: start, endPoint: end)
+    }
+
+    var body: some View {
+        ZStack {
+            Rectangle().fill(.ultraThinMaterial)
+                .mask(mask([.init(color: .black, location: 0), .init(color: .black, location: 0.35), .init(color: .clear, location: 1)]))
+            Rectangle().fill(.regularMaterial)
+                .mask(mask([.init(color: .black, location: 0), .init(color: .clear, location: 0.6)]))
+            mask([.init(color: .black.opacity(0.85), location: 0), .init(color: .black.opacity(0.45), location: 0.5),
+                  .init(color: .black.opacity(0), location: 1)])
+        }
+        .environment(\.colorScheme, .dark)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
