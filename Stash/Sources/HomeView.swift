@@ -66,6 +66,7 @@ struct HomeView: View {
         }
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.immediately)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("homeGrid")
     }
 
@@ -254,6 +255,7 @@ struct FilterMenuButton: View {
 /// Glass toast at the top of the screen.
 struct ToastView: View {
     @EnvironmentObject var model: AppModel
+    var topPadding: CGFloat = 4
 
     var body: some View {
         if let text = model.toastText {
@@ -263,7 +265,7 @@ struct ToastView: View {
                 .padding(.vertical, 10)
                 .background(Color(hex: "#3A3A3C").opacity(0.85), in: Capsule())
                 .overlay(Capsule().strokeBorder(.white.opacity(0.12)))
-                .padding(.top, 4)
+                .padding(.top, topPadding)
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .accessibilityIdentifier("toast")
         }

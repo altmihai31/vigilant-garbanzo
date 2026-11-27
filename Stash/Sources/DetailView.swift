@@ -25,13 +25,18 @@ struct DetailView: View {
                     }
                     .scrollIndicators(.hidden)
                     .ignoresSafeArea(edges: .top)
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("detailView")
+                    LinearGradient(colors: [.black.opacity(0.75), .black.opacity(0)], startPoint: .top, endPoint: .bottom)
+                        .frame(height: geo.safeAreaInsets.top + 72)
+                        .ignoresSafeArea(edges: .top)
+                        .allowsHitTesting(false)
                     topBar(item)
                 }
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .top) { ToastView() }
+        .overlay(alignment: .top) { ToastView(topPadding: 66) }
         .fullScreenCover(isPresented: $showReader) {
             if let item = model.item(itemID) { ReaderView(item: item) }
         }

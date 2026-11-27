@@ -60,6 +60,7 @@ struct ReaderView: View {
                 .padding(.bottom, 80)
             }
             .scrollIndicators(.hidden)
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("readerView")
 
             HStack {

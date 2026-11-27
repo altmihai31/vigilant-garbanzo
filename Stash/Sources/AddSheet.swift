@@ -54,6 +54,7 @@ struct AddSheet: View {
                 checklist = e.checklist
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("addSheet")
     }
 

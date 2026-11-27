@@ -39,6 +39,7 @@ struct ShareHowToView: View {
                 .padding(.bottom, 8)
         }
         .preferredColorScheme(.dark)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("howToView")
     }
 

@@ -21,6 +21,17 @@ final class StashUITests: XCTestCase {
         e.tap()
     }
 
+    private func waitGone(_ e: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+        let exp = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: e)
+        return XCTWaiter().wait(for: [exp], timeout: timeout) == .completed
+    }
+
+    /// The Simulator shows a one-time "slide to type" sheet the first time the keyboard opens.
+    private func dismissKeyboardTip() {
+        let cont = app.buttons["Continue"]
+        if cont.waitForExistence(timeout: 1.5) { cont.tap() }
+    }
+
     private func menuItem(_ title: String) -> XCUIElement {
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
     }
@@ -54,7 +65,7 @@ final class StashUITests: XCTestCase {
         XCTAssertTrue(el("collectionTitle").waitForExistence(timeout: 5))
         XCTAssertEqual(el("collectionTitle").label, "Places")
         XCTAssertTrue(el("card-Best Sushi Spots in Tokyo for First-Time Visitors").exists)
-        XCTAssertFalse(el("card-Sony WH-1000XM6 Review").exists)
+        XCTAssertTrue(waitGone(el("card-Sony WH-1000XM6 Review")))
         snap("03-places")
         tap("showAll")
 
@@ -81,9 +92,10 @@ final class StashUITests: XCTestCase {
         tap("searchButton")
         let field = el("searchField")
         XCTAssertTrue(field.waitForExistence(timeout: 5))
+        dismissKeyboardTip()
         field.typeText("omakase")
         XCTAssertTrue(el("card-Best Sushi Spots in Tokyo for First-Time Visitors").waitForExistence(timeout: 5))
-        XCTAssertFalse(el("card-Top Hotels on the Amalfi Coast").exists)
+        XCTAssertTrue(waitGone(el("card-Top Hotels on the Amalfi Coast")))
         snap("07-search")
         tap("closeSearch")
 
@@ -93,6 +105,7 @@ final class StashUITests: XCTestCase {
         XCTAssertTrue(url.waitForExistence(timeout: 5))
         snap("08-add-link-empty")
         url.tap()
+        dismissKeyboardTip()
         url.typeText("monocle.com/travel/lisbon-city-guide")
         XCTAssertTrue(el("linkPreview").waitForExistence(timeout: 10))
         snap("09-add-link-preview")
@@ -151,7 +164,7 @@ final class StashUITests: XCTestCase {
         XCTAssertTrue(later.waitForExistence(timeout: 5))
         later.tap()
         XCTAssertEqual(el("collectionTitle").label, "Read later")
-        XCTAssertFalse(el("card-Sony WH-1000XM6 Review").exists)
+        XCTAssertTrue(waitGone(el("card-Sony WH-1000XM6 Review")))
         snap("16-read-later")
     }
 }
