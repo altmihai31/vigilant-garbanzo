@@ -84,14 +84,14 @@ public final class ItemStore: @unchecked Sendable {
 
     static let encoder: JSONEncoder = {
         let e = JSONEncoder()
-        e.dateEncodingStrategy = .secondsSince1970
+        e.dateEncodingStrategy = .deferredToDate
         e.outputFormatting = [.sortedKeys]
         return e
     }()
 
     static let decoder: JSONDecoder = {
         let d = JSONDecoder()
-        d.dateDecodingStrategy = .secondsSince1970
+        d.dateDecodingStrategy = .deferredToDate
         return d
     }()
 
