@@ -1,0 +1,146 @@
+name: iOS build
+
+on:
+  push:
+    branches-ignore: [ci-screenshots]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  logic-tests:
+    name: Logic unit tests (StashKit)
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show toolchain
+        run: xcodebuild -version && swift --version
+      - name: swift test
+        run: swift test --package-path Packages/StashKit
+
+  app:
+    name: Build, UI tests, screenshots, unsigned .ipa
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: which xcodegen || brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Pick an iPhone simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)["devices"]
+          best = None
+          for runtime, devs in data.items():
+              if "iOS" not in runtime:
+                  continue
+              ver = tuple(int(x) for x in runtime.split("iOS-")[-1].split("-") if x.isdigit())
+              for d in devs:
+                  name = d["name"]
+                  if not name.startswith("iPhone") or "SE" in name or "mini" in name:
+                      continue
+                  score = (ver, "Pro" in name and "Max" not in name, name)
+                  if best is None or score > best[0]:
+                      best = (score, d["udid"], name, runtime)
+          print(best[1])
+          print(best[2] + " / " + best[3], file=sys.stderr)
+          ')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
+
+      - name: UI tests in the iPhone Simulator
+        run: |
+          mkdir -p screenshots
+          set -o pipefail
+          TEST_RUNNER_SCREENSHOT_DIR="$PWD/screenshots" xcodebuild test \
+            -project Stash.xcodeproj -scheme Stash \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -resultBundlePath build/UITests.xcresult \
+            -derivedDataPath build/dd-sim \
+            CODE_SIGNING_ALLOWED=NO | tee build-test.log | grep -E "error:|warning: unre|Test Case|Executed|\*\*" || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" build-test.log
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/*.png
+          if-no-files-found: warn
+
+      - name: Publish screenshots to the ci-screenshots branch
+        if: always()
+        continue-on-error: true
+        run: |
+          ls screenshots/*.png >/dev/null 2>&1 || exit 0
+          DEST="${GITHUB_REF_NAME//\//-}"
+          git fetch origin ci-screenshots:ci-screenshots 2>/dev/null || true
+          rm -rf /tmp/shots && git worktree add /tmp/shots ci-screenshots 2>/dev/null || { git worktree add --detach /tmp/shots && (cd /tmp/shots && git checkout --orphan ci-screenshots && git rm -rfq . || true); }
+          cd /tmp/shots
+          rm -rf "$DEST" && mkdir -p "$DEST" && cp "$GITHUB_WORKSPACE"/screenshots/*.png "$DEST"/
+          {
+            echo "# Stash screenshots ($DEST, ${GITHUB_SHA::7})"
+            for f in "$DEST"/*.png; do echo; echo "## $(basename "$f" .png)"; echo; echo "<img src=\"$(basename "$f")\" width=\"320\">"; done
+          } > "$DEST/README.md"
+          git add -A
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -qm "Screenshots for $DEST at ${GITHUB_SHA::7}" || exit 0
+          git push origin ci-screenshots
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            build/UITests.xcresult
+            build-test.log
+
+      - name: Build unsigned .ipa
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Stash.xcodeproj -scheme Stash -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build/dd-device \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" | tee build-ipa.log | grep -E "error:|\*\*" || true
+          grep -q "\*\* BUILD SUCCEEDED \*\*" build-ipa.log
+          rm -rf Payload && mkdir Payload
+          cp -R build/dd-device/Build/Products/Release-iphoneos/Stash.app Payload/
+          ls Payload/Stash.app/PlugIns
+          # Ad-hoc sign so the App Group entitlement travels inside the .ipa; Sideloadly re-signs it with your Apple ID.
+          codesign --force --sign - --entitlements StashShare/StashShare.entitlements Payload/Stash.app/PlugIns/StashShare.appex
+          codesign --force --sign - --entitlements Stash/Stash.entitlements Payload/Stash.app
+          codesign -d --entitlements - Payload/Stash.app/PlugIns/StashShare.appex
+          zip -qry Stash.ipa Payload
+          ls -lh Stash.ipa
+
+      - name: Upload .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stash-ipa
+          path: Stash.ipa
+
+      - name: Publish .ipa to the "latest" release (main only)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest Stash.ipa --title "Stash (latest main build)" \
+            --notes "Unsigned build from ${GITHUB_SHA::7}. Install with Sideloadly using your Apple ID; with a free account it expires after 7 days and uses 2 of your 10 weekly app IDs (app + Share extension)." \
+            --prerelease
