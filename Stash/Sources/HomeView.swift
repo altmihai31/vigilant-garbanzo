@@ -12,17 +12,18 @@ struct HomeView: View {
             ZStack(alignment: .bottom) {
                 Color.black.ignoresSafeArea()
                 grid
-                // Fade to solid black behind the bottom buttons, down past the home indicator.
-                EdgeFade(edge: .bottom)
-                    .frame(height: 140)
-                    .ignoresSafeArea(edges: .bottom)
+                // Blur fades at the top and bottom that run to the very edges of the screen,
+                // sized from the real safe-area insets so they cover the status bar and home indicator.
+                GeometryReader { geo in
+                    VStack(spacing: 0) {
+                        EdgeFade(edge: .top).frame(height: geo.safeAreaInsets.top + 26)
+                        Spacer(minLength: 0)
+                        EdgeFade(edge: .bottom).frame(height: geo.safeAreaInsets.bottom + 110)
+                    }
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
                 bottomBar
-            }
-            // The same fade at the top, behind the status bar and the filter button.
-            .overlay(alignment: .top) {
-                EdgeFade(edge: .top)
-                    .frame(height: 70)
-                    .ignoresSafeArea(edges: .top)
             }
             .overlay(alignment: .topTrailing) {
                 FilterMenuButton()
