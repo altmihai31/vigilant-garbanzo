@@ -1,4 +1,4 @@
-# Stash screenshots (claude-project-thread-onjzx1, 460772f)
+# Stash screenshots (claude-project-thread-onjzx1, 7c7d241)
 
 ## 01-home
 
@@ -31,30 +31,6 @@
 ## 08-add-link-empty
 
 <img src="08-add-link-empty.png" width="320">
-
-## 09-add-link-preview
-
-<img src="09-add-link-preview.png" width="320">
-
-## 10-home-after-save
-
-<img src="10-home-after-save.png" width="320">
-
-## 11-saved-link-detail
-
-<img src="11-saved-link-detail.png" width="320">
-
-## 12-new-note
-
-<img src="12-new-note.png" width="320">
-
-## 13-note-detail
-
-<img src="13-note-detail.png" width="320">
-
-## 14-share-card
-
-<img src="14-share-card.png" width="320">
 
 ## 15-reminder-set
 
