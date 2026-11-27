@@ -16,7 +16,9 @@ struct HomeView: View {
                 // sized from the real safe-area insets so they cover the status bar and home indicator.
                 GeometryReader { geo in
                     VStack(spacing: 0) {
-                        EdgeFade(edge: .top).frame(height: geo.safeAreaInsets.top + 26)
+                        // Full strength across the whole status bar, then fading out below it.
+                        let topH = geo.safeAreaInsets.top + 56
+                        EdgeFade(edge: .top, solid: geo.safeAreaInsets.top / max(topH, 1)).frame(height: topH)
                         Spacer(minLength: 0)
                         EdgeFade(edge: .bottom).frame(height: geo.safeAreaInsets.bottom + 110)
                     }
@@ -283,6 +285,8 @@ struct ToastView: View {
 /// like the bars in Apple's own apps. Two materials, each masked by a gradient, make the blur ramp up.
 struct EdgeFade: View {
     let edge: VerticalEdge
+    /// How much of the fade, from the edge, stays at full strength (0...1).
+    var solid: CGFloat = 0.3
 
     private var start: UnitPoint { edge == .top ? .top : .bottom }
     private var end: UnitPoint { edge == .top ? .bottom : .top }
@@ -294,11 +298,12 @@ struct EdgeFade: View {
     var body: some View {
         ZStack {
             Rectangle().fill(.ultraThinMaterial)
-                .mask(mask([.init(color: .black, location: 0), .init(color: .black, location: 0.35), .init(color: .clear, location: 1)]))
+                .mask(mask([.init(color: .black, location: 0), .init(color: .black, location: solid + 0.05), .init(color: .clear, location: 1)]))
             Rectangle().fill(.regularMaterial)
-                .mask(mask([.init(color: .black, location: 0), .init(color: .clear, location: 0.6)]))
-            mask([.init(color: .black.opacity(0.85), location: 0), .init(color: .black.opacity(0.45), location: 0.5),
-                  .init(color: .black.opacity(0), location: 1)])
+                .mask(mask([.init(color: .black, location: 0), .init(color: .black, location: solid),
+                            .init(color: .clear, location: min(1, solid + 0.35))]))
+            mask([.init(color: .black.opacity(0.85), location: 0), .init(color: .black.opacity(0.8), location: solid),
+                  .init(color: .black.opacity(0.4), location: min(1, solid + 0.3)), .init(color: .black.opacity(0), location: 1)])
         }
         .environment(\.colorScheme, .dark)
         .allowsHitTesting(false)
