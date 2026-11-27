@@ -311,7 +311,7 @@ struct DetailView: View {
         let status: String = {
             if let r = item.remindAt, item.hasUpcomingReminder() { return "Reminder: " + DateText.reminder(r) }
             if item.isUnread { return "In your Read later list" }
-            return markedReadHere ? "You read this" : "Pick a time to be reminded"
+            return markedReadHere ? "You read this" : "Pick a time below to read it later"
         }()
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
@@ -326,14 +326,17 @@ struct DetailView: View {
                         .accessibilityIdentifier("readLaterStatus")
                 }
                 Spacer()
-                Button(item.isUnread ? "Mark as read" : (markedReadHere ? "Mark unread" : "Add")) {
-                    if item.isUnread { markedReadHere = true; model.markRead(itemID) } else { model.markUnread(itemID) }
+                // Only a clear action: Mark as read, or undo it. Picking a time below adds the item.
+                if item.isUnread || markedReadHere {
+                    Button(item.isUnread ? "Mark as read" : "Mark unread") {
+                        if item.isUnread { markedReadHere = true; model.markRead(itemID) } else { model.markUnread(itemID) }
+                    }
+                    .font(.scaled(13, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+                    .accessibilityIdentifier(item.isUnread ? "markRead" : "markUnread")
                 }
-                .font(.scaled(13, weight: .semibold))
-                .foregroundStyle(Theme.accent)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-                .accessibilityIdentifier(item.isUnread ? "markRead" : "markUnread")
             }
             HStack(spacing: 8) {
                 ForEach(ReminderPreset.allCases) { p in
@@ -485,9 +488,9 @@ struct DetailView: View {
             if let systemImage { Image(systemName: systemImage).font(.scaled(11, weight: .bold)) }
             Text(text)
         }
-        .font(.scaled(13))
-        .padding(.horizontal, 11)
-        .padding(.vertical, 6)
+        .font(.scaled(14, weight: .medium))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
         .background(Theme.field, in: Capsule())
         .foregroundStyle(Color(hex: "#D1D1D6"))
         .frame(minHeight: 44)

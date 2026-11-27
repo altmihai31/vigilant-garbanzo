@@ -25,7 +25,7 @@ enum Theme {
     static let ink = Color(hex: "#F5F5F7")
     static let ink2 = Color(hex: "#A1A1A6")
     static let ink3 = Color(hex: "#8E8E93")  // 5.0:1 on the card colour
-    static let accent = Color(hex: "#5EA2FF")
+    static let accent = Color(uiColor: .systemBlue)  // HIG system blue
     static let reminder = Color(hex: "#FF9F0A")
     static let summary = Color(hex: "#BF9BFF")
     static let collectionInk = Color(hex: "#D9C6FF")
@@ -169,17 +169,28 @@ struct FlowLayout: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, rowH: CGFloat = 0
+        // Lay out rows first, then centre each item vertically in its row so pills of
+        // different heights (collection, tags, Add tag) share one centre line.
+        var rows: [[(Subviews.Element, CGSize)]] = [[]]
+        var x = bounds.minX
         for s in subviews {
             let size = s.sizeThatFits(.unspecified)
             if x > bounds.minX, x + size.width > bounds.maxX {
+                rows.append([])
                 x = bounds.minX
-                y += rowH + spacing
-                rowH = 0
             }
-            s.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            rows[rows.count - 1].append((s, size))
             x += size.width + spacing
-            rowH = max(rowH, size.height)
+        }
+        var y = bounds.minY
+        for row in rows where !row.isEmpty {
+            let rowH = row.map(\.1.height).max() ?? 0
+            var x = bounds.minX
+            for (s, size) in row {
+                s.place(at: CGPoint(x: x, y: y + (rowH - size.height) / 2), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+            y += rowH + spacing
         }
     }
 }
@@ -190,29 +201,5 @@ extension Font {
     static func scaled(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
         let s = UIFontMetrics(forTextStyle: .body).scaledValue(for: size)
         return .system(size: min(s, size * 1.8), weight: weight, design: design)
-    }
-}
-
-/// Soft, low-saturation glow over black, after the iOS 27 Siri app: pink, purple and blue at the top,
-/// a faint warm light at the bottom. Kept dim so cards and text stay the focus.
-struct AmbientGlow: View {
-    var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width, h = geo.size.height
-            ZStack {
-                Color.black
-                RadialGradient(colors: [Color(hex: "#8E6BE0").opacity(0.20), .clear], center: UnitPoint(x: 0.15, y: -0.02),
-                               startRadius: 0, endRadius: w * 0.85)
-                RadialGradient(colors: [Color(hex: "#2E4A9E").opacity(0.26), .clear], center: UnitPoint(x: 0.85, y: 0.0),
-                               startRadius: 0, endRadius: w * 0.8)
-                RadialGradient(colors: [Color(hex: "#E36BB0").opacity(0.10), .clear], center: UnitPoint(x: 0.5, y: 0.08),
-                               startRadius: 0, endRadius: w * 0.6)
-                RadialGradient(colors: [Color(hex: "#F0A060").opacity(0.08), .clear], center: UnitPoint(x: 0.5, y: 1.05),
-                               startRadius: 0, endRadius: max(w, h * 0.35))
-            }
-        }
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }

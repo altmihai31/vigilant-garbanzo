@@ -1,6 +1,5 @@
 import SwiftUI
 import StashKit
-import UniformTypeIdentifiers
 
 /// New Link / New Note sheet. Also edits an existing note.
 struct AddSheet: View {
@@ -21,7 +20,6 @@ struct AddSheet: View {
     @State private var checklist: [ChecklistItem] = []
     @State private var preview: PreviewState = .idle
     @State private var previewTask: Task<Void, Never>?
-    @State private var showHowTo = false
     @State private var hint: String?
     @FocusState private var focus: Field?
 
@@ -46,7 +44,6 @@ struct AddSheet: View {
         .presentationCornerRadius(38)
         .presentationDragIndicator(.visible)
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $showHowTo) { ShareHowToView() }
         .onAppear {
             if let e = editing {
                 kind = .note
@@ -123,17 +120,19 @@ struct AddSheet: View {
                     .focused($focus, equals: .url)
                     .accessibilityIdentifier("urlField")
                     .onChange(of: urlText) { _, new in schedulePreview(for: new) }
-                // The system Paste button ignores taps when it is drawn with low contrast,
-                // so it uses the solid accent colour. It accepts copied links and plain text.
-                PasteButton(supportedContentTypes: [.url, .plainText]) { providers in
-                    Task { @MainActor in
-                        if let s = await Self.pastedText(providers) { urlText = s }
-                    }
+                // A plain button that reads the clipboard. iOS asks "Allow Paste?" the first time
+                // (Settings > Stash > Paste from Other Apps can make it Always Allow).
+                Button { pasteFromClipboard() } label: {
+                    Text("Paste")
+                        .font(.scaled(15, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .frame(minHeight: 34)
+                        .background(Theme.accent, in: Capsule())
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
-                .labelStyle(.titleOnly)
-                .buttonBorderShape(.capsule)
-                .tint(Theme.accent)
-                .controlSize(.small)
+                .buttonStyle(.plain)
                 .accessibilityIdentifier("pasteButton")
             }
             .font(.scaled(16))
@@ -154,22 +153,6 @@ struct AddSheet: View {
                 .background(Theme.field, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .accessibilityIdentifier("linkNoteField")
 
-            HStack(spacing: 12) {
-                Image(systemName: "square.and.arrow.up").font(.scaled(20)).foregroundStyle(Theme.accent)
-                Text("Faster: tap Share in Safari or YouTube and pick Stash.")
-                    .font(.scaled(14))
-                    .foregroundStyle(Color(hex: "#CFE0FF"))
-                Spacer(minLength: 4)
-                Button("Show me") { showHowTo = true }
-                    .font(.scaled(14, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
-                    .frame(minHeight: 44)
-                    .contentShape(Rectangle())
-                    .accessibilityIdentifier("showMe")
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(Theme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
     }
 
@@ -325,23 +308,17 @@ struct AddSheet: View {
         }
     }
 
-    /// A copied URL (Safari's Copy Link) or text containing one.
-    static func pastedText(_ providers: [NSItemProvider]) async -> String? {
-        for p in providers {
-            if p.canLoadObject(ofClass: URL.self),
-               let url = await withCheckedContinuation({ (c: CheckedContinuation<URL?, Never>) in
-                   _ = p.loadObject(ofClass: URL.self) { u, _ in c.resume(returning: u) }
-               }) {
-                return url.absoluteString
-            }
-            if p.canLoadObject(ofClass: NSString.self),
-               let s = await withCheckedContinuation({ (c: CheckedContinuation<String?, Never>) in
-                   _ = p.loadObject(ofClass: NSString.self) { s, _ in c.resume(returning: s as? String) }
-               }) {
-                return s.trimmingCharacters(in: .whitespacesAndNewlines)
-            }
+    private func pasteFromClipboard() {
+        let pb = UIPasteboard.general
+        if let url = pb.url {
+            urlText = url.absoluteString
+        } else if let text = pb.string?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+            urlText = text
+        } else {
+            flash("Copy a link first")
+            return
         }
-        return nil
+        focus = nil
     }
 
     private func addChecklistItem() {

@@ -108,6 +108,12 @@ final class StashUITests: XCTestCase {
         // The Paste button next to the field fills in a copied link.
         UIPasteboard.general.string = "https://monocle.com/travel/lisbon-city-guide"
         tap("pasteButton")
+        // iOS may ask once whether Stash can paste from another app.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for allow in [app.buttons["Allow Paste"], springboard.buttons["Allow Paste"]] where allow.waitForExistence(timeout: 2) {
+            allow.tap()
+            break
+        }
         XCTAssertTrue(el("linkPreview").waitForExistence(timeout: 10))
         snap("09-add-link-preview")
         tap("saveButton")
@@ -138,13 +144,6 @@ final class StashUITests: XCTestCase {
         snap("13-note-detail")
         tap("backButton")
 
-        // How the Share Sheet card looks.
-        tap("addButton")
-        tap("showMe")
-        XCTAssertTrue(el("shareCard").waitForExistence(timeout: 5))
-        snap("14-share-card")
-        tap("closeHowTo")
-        tap("cancelAdd")
     }
 
     func testReadLater() {

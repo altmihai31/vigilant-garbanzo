@@ -10,13 +10,14 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $model.path) {
             ZStack(alignment: .bottom) {
-                AmbientGlow()
+                Color.black.ignoresSafeArea()
                 grid
-                LinearGradient(stops: [.init(color: Theme.background.opacity(0), location: 0),
-                                       .init(color: Theme.background.opacity(0.55), location: 0.55),
-                                       .init(color: Theme.background.opacity(0.85), location: 1)],
+                // A gentle fade to black behind the bottom buttons, running all the way to the screen edge.
+                LinearGradient(stops: [.init(color: .black.opacity(0), location: 0),
+                                       .init(color: .black.opacity(0.6), location: 0.5),
+                                       .init(color: .black.opacity(0.9), location: 1)],
                                startPoint: .top, endPoint: .bottom)
-                    .frame(height: 140)
+                    .frame(height: 120)
                     .ignoresSafeArea(edges: .bottom)
                     .allowsHitTesting(false)
                 bottomBar
@@ -66,6 +67,8 @@ struct HomeView: View {
         }
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.immediately)
+        // Cards scroll all the way to the bottom edge instead of stopping above the home indicator.
+        .ignoresSafeArea(edges: .bottom)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("homeGrid")
     }
