@@ -309,6 +309,11 @@ struct AddSheet: View {
     }
 
     private func pasteFromClipboard() {
+        // UI tests can't answer the system "Allow Paste?" prompt, so they hand the text in directly.
+        if let injected = ProcessInfo.processInfo.environment["STASH_UITEST_CLIPBOARD"] {
+            urlText = injected
+            return
+        }
         let pb = UIPasteboard.general
         if let url = pb.url {
             urlText = url.absoluteString
