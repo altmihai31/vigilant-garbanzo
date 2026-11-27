@@ -84,6 +84,16 @@ struct ReaderView: View {
                                        startPoint: .top, endPoint: .bottom).ignoresSafeArea(edges: .top))
         }
         .preferredColorScheme(.dark)
+        // Swipe in from the left edge to close, like Back on the other screens.
+        .overlay(alignment: .leading) {
+            Color.clear
+                .frame(width: 22)
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 12).onEnded { v in
+                    if v.translation.width > 70, abs(v.translation.height) < 120 { dismiss() }
+                })
+                .ignoresSafeArea()
+        }
     }
 
     private var savedText: String {

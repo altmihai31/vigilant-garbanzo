@@ -15,9 +15,9 @@ extension Color {
 
 /// Design tokens from the spec's design system table. Stash is dark only.
 enum Theme {
-    static let background = Color(hex: "#2B2B2D")
-    static let card = Color(hex: "#232325")
-    static let cardEdge = Color.white.opacity(0.07)
+    static let background = Color.black  // near-black like the iOS 27 Siri app
+    static let card = Color(hex: "#18181A")
+    static let cardEdge = Color.white.opacity(0.09)
     static let detail = Color.black
     static let sheet = Color(hex: "#1C1C1E")
     static let field = Color(hex: "#2C2C2E")
@@ -190,5 +190,29 @@ extension Font {
     static func scaled(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
         let s = UIFontMetrics(forTextStyle: .body).scaledValue(for: size)
         return .system(size: min(s, size * 1.8), weight: weight, design: design)
+    }
+}
+
+/// Soft, low-saturation glow over black, after the iOS 27 Siri app: pink, purple and blue at the top,
+/// a faint warm light at the bottom. Kept dim so cards and text stay the focus.
+struct AmbientGlow: View {
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            ZStack {
+                Color.black
+                RadialGradient(colors: [Color(hex: "#8E6BE0").opacity(0.20), .clear], center: UnitPoint(x: 0.15, y: -0.02),
+                               startRadius: 0, endRadius: w * 0.85)
+                RadialGradient(colors: [Color(hex: "#2E4A9E").opacity(0.26), .clear], center: UnitPoint(x: 0.85, y: 0.0),
+                               startRadius: 0, endRadius: w * 0.8)
+                RadialGradient(colors: [Color(hex: "#E36BB0").opacity(0.10), .clear], center: UnitPoint(x: 0.5, y: 0.08),
+                               startRadius: 0, endRadius: w * 0.6)
+                RadialGradient(colors: [Color(hex: "#F0A060").opacity(0.08), .clear], center: UnitPoint(x: 0.5, y: 1.05),
+                               startRadius: 0, endRadius: max(w, h * 0.35))
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

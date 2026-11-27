@@ -9,6 +9,7 @@ import StashKit
 
 /// Share Extension: shows the Save to Stash card, writes an inbox entry to the shared container and closes.
 /// The main app fetches the summary, collection and offline copy the next time it is active.
+@objc(ShareViewController)
 final class ShareViewController: UIViewController {
     private let state = ShareState()
 

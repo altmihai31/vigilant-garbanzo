@@ -1,5 +1,6 @@
 import SwiftUI
 import StashKit
+import UniformTypeIdentifiers
 
 /// New Link / New Note sheet. Also edits an existing note.
 struct AddSheet: View {
@@ -122,14 +123,18 @@ struct AddSheet: View {
                     .focused($focus, equals: .url)
                     .accessibilityIdentifier("urlField")
                     .onChange(of: urlText) { _, new in schedulePreview(for: new) }
-                PasteButton(payloadType: String.self) { strings in
-                    guard let s = strings.first else { return }
-                    Task { @MainActor in urlText = s }
+                // The system Paste button ignores taps when it is drawn with low contrast,
+                // so it uses the solid accent colour. It accepts copied links and plain text.
+                PasteButton(supportedContentTypes: [.url, .plainText]) { providers in
+                    Task { @MainActor in
+                        if let s = await Self.pastedText(providers) { urlText = s }
+                    }
                 }
                 .labelStyle(.titleOnly)
-                .buttonBorderShape(.roundedRectangle(radius: 12))
-                .tint(Color.white.opacity(0.14))
+                .buttonBorderShape(.capsule)
+                .tint(Theme.accent)
                 .controlSize(.small)
+                .accessibilityIdentifier("pasteButton")
             }
             .font(.scaled(16))
             .padding(.leading, 14)
@@ -260,29 +265,33 @@ struct AddSheet: View {
                 .background(Theme.field, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .accessibilityIdentifier("noteBodyField")
 
+            // Checklist rows are full-width fields, the same shape as Title and the note text.
             VStack(alignment: .leading, spacing: 10) {
                 Text("CHECKLIST").font(.scaled(13)).tracking(0.3).foregroundStyle(Theme.ink3).padding(.horizontal, 4)
                 ForEach($checklist) { $entry in
-                    HStack(spacing: 10) {
+                    HStack(spacing: 4) {
                         Button {
                             entry.done.toggle()
                         } label: {
                             Image(systemName: entry.done ? "checkmark.circle.fill" : "circle")
-                                .font(.scaled(20))
-                                .foregroundStyle(entry.done ? Theme.ink3 : Theme.ink2)
+                                .font(.scaled(21))
+                                .foregroundStyle(entry.done ? Theme.accent : Theme.ink2)
                                 .frame(width: 44, height: 44)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        TextField("Item", text: $entry.text)
+                        .accessibilityLabel(entry.done ? "Done" : "Not done")
+                        TextField("", text: $entry.text, prompt: Text("Item").foregroundStyle(Theme.ink3))
                             .focused($focus, equals: .check(entry.id))
                             .submitLabel(.next)
                             .onSubmit { addChecklistItem() }
                             .strikethrough(entry.done)
+                            .foregroundStyle(entry.done ? Theme.ink2 : Theme.ink)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         Button {
                             checklist.removeAll { $0.id == entry.id }
                         } label: {
-                            Image(systemName: "minus.circle").foregroundStyle(Theme.ink3)
+                            Image(systemName: "xmark.circle.fill").font(.scaled(18)).foregroundStyle(Theme.ink3)
                                 .frame(width: 44, height: 44)
                                 .contentShape(Rectangle())
                         }
@@ -290,20 +299,49 @@ struct AddSheet: View {
                         .accessibilityLabel("Remove item")
                     }
                     .font(.scaled(16))
+                    .padding(.leading, 4)
+                    .padding(.trailing, 2)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .background(Theme.field, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 Button {
                     addChecklistItem()
                 } label: {
-                    Label("Add checklist item", systemImage: "plus.circle.fill")
-                        .font(.scaled(15, weight: .semibold))
-                        .foregroundStyle(Theme.accent)
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus.circle.fill").font(.scaled(21)).frame(width: 44, height: 44)
+                        Text("Add checklist item").font(.scaled(16, weight: .semibold))
+                        Spacer(minLength: 0)
+                    }
+                    .foregroundStyle(Theme.accent)
+                    .padding(.leading, 4)
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                    .background(Theme.field.opacity(0.5), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("addChecklistItem")
             }
-            .padding(14)
-            .background(Theme.field.opacity(0.6), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// A copied URL (Safari's Copy Link) or text containing one.
+    static func pastedText(_ providers: [NSItemProvider]) async -> String? {
+        for p in providers {
+            if p.canLoadObject(ofClass: URL.self),
+               let url = await withCheckedContinuation({ (c: CheckedContinuation<URL?, Never>) in
+                   _ = p.loadObject(ofClass: URL.self) { u, _ in c.resume(returning: u) }
+               }) {
+                return url.absoluteString
+            }
+            if p.canLoadObject(ofClass: NSString.self),
+               let s = await withCheckedContinuation({ (c: CheckedContinuation<String?, Never>) in
+                   _ = p.loadObject(ofClass: NSString.self) { s, _ in c.resume(returning: s as? String) }
+               }) {
+                return s.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        return nil
     }
 
     private func addChecklistItem() {

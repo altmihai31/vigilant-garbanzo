@@ -26,6 +26,8 @@ targets:
       - target: StashShare
     entitlements:
       path: Stash/Stash.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.altmihai31.stash]
     info:
       path: Stash/Info.plist
       properties:
@@ -58,6 +60,8 @@ targets:
       - package: StashKit
     entitlements:
       path: StashShare/StashShare.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.altmihai31.stash]
     info:
       path: StashShare/Info.plist
       properties:
@@ -67,11 +71,10 @@ targets:
           NSAllowsArbitraryLoads: true
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
-          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionPrincipalClass: ShareViewController
           NSExtensionAttributes:
             NSExtensionActivationRule:
               NSExtensionActivationSupportsWebURLWithMaxCount: 1
-              NSExtensionActivationSupportsWebPageWithMaxCount: 1
               NSExtensionActivationSupportsText: true
     settings:
       base:

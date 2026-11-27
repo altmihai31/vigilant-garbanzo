@@ -127,7 +127,13 @@ jobs:
           # Ad-hoc sign so the App Group entitlement travels inside the .ipa; Sideloadly re-signs it with your Apple ID.
           codesign --force --sign - --entitlements StashShare/StashShare.entitlements Payload/Stash.app/PlugIns/StashShare.appex
           codesign --force --sign - --entitlements Stash/Stash.entitlements Payload/Stash.app
-          codesign -d --entitlements - Payload/Stash.app/PlugIns/StashShare.appex
+          codesign -d --entitlements :- Payload/Stash.app/PlugIns/StashShare.appex
+          codesign -d --entitlements :- Payload/Stash.app
+          # The share extension must be a complete XPC bundle for iOS to list it in the share sheet.
+          plutil -p Payload/Stash.app/PlugIns/StashShare.appex/Info.plist
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundlePackageType' Payload/Stash.app/PlugIns/StashShare.appex/Info.plist)" = "XPC!"
+          /usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' Payload/Stash.app/PlugIns/StashShare.appex/Info.plist | grep -q com.apple.share-services
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Payload/Stash.app/Info.plist)" = "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Payload/Stash.app/PlugIns/StashShare.appex/Info.plist)"
           zip -qry Stash.ipa Payload
           ls -lh Stash.ipa
 

@@ -10,7 +10,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $model.path) {
             ZStack(alignment: .bottom) {
-                Theme.background.ignoresSafeArea()
+                AmbientGlow()
                 grid
                 LinearGradient(stops: [.init(color: Theme.background.opacity(0), location: 0),
                                        .init(color: Theme.background.opacity(0.55), location: 0.55),
@@ -202,7 +202,7 @@ struct FilterMenuButton: View {
         Menu {
             Section("Show") {
                 option(.all, icon: "square.grid.2x2")
-                option(.readLater, icon: "circle.fill")
+                option(.readLater, icon: "eyeglasses")
                 option(.notes, icon: "text.alignleft")
             }
             Section("Collections \u{00B7} Auto") {

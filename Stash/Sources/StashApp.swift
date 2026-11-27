@@ -65,3 +65,17 @@ struct DynamicTypeRoot<Content: View>: View {
     @ViewBuilder var content: () -> Content
     var body: some View { content().id(size) }
 }
+
+/// The detail screen hides the navigation bar for its floating glass buttons, and UIKit turns off the
+/// swipe-from-the-left-edge Back gesture when the bar is hidden. This keeps the gesture on whenever
+/// there is a screen to go back to.
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+    }
+
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        gestureRecognizer === interactivePopGestureRecognizer ? viewControllers.count > 1 : true
+    }
+}

@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 /// Drives the app with the mockup's sample data and saves a screenshot of every screen.
 /// Screenshots go to $SCREENSHOT_DIR (CI passes TEST_RUNNER_SCREENSHOT_DIR) and into the test results.
@@ -104,9 +105,9 @@ final class StashUITests: XCTestCase {
         let url = el("urlField")
         XCTAssertTrue(url.waitForExistence(timeout: 5))
         snap("08-add-link-empty")
-        url.tap()
-        dismissKeyboardTip()
-        url.typeText("monocle.com/travel/lisbon-city-guide")
+        // The Paste button next to the field fills in a copied link.
+        UIPasteboard.general.string = "https://monocle.com/travel/lisbon-city-guide"
+        tap("pasteButton")
         XCTAssertTrue(el("linkPreview").waitForExistence(timeout: 10))
         snap("09-add-link-preview")
         tap("saveButton")
@@ -156,7 +157,10 @@ final class StashUITests: XCTestCase {
         snap("15-reminder-set")
         tap("markRead")
         XCTAssertEqual(el("readLaterStatus").label, "You read this")
-        tap("backButton")
+        // Swipe in from the left edge to go back.
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)))
+        XCTAssertTrue(waitGone(el("detailView")), "Edge swipe did not go back")
         XCTAssertTrue(el("filterButton").label.contains("3 unread"), el("filterButton").label)
 
         tap("filterButton")
