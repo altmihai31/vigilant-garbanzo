@@ -42,7 +42,7 @@ struct StashApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            DynamicTypeRoot { HomeView() }
                 .environmentObject(model)
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
@@ -56,4 +56,12 @@ struct StashApp: App {
                 .task { model.becameActive() }
         }
     }
+}
+
+/// Fonts are sized with `Font.scaled`, which reads the Dynamic Type setting when a view is drawn,
+/// so the tree is rebuilt when the setting changes. Navigation state lives in AppModel and survives.
+struct DynamicTypeRoot<Content: View>: View {
+    @Environment(\.dynamicTypeSize) private var size
+    @ViewBuilder var content: () -> Content
+    var body: some View { content().id(size) }
 }

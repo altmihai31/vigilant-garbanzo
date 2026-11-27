@@ -57,6 +57,7 @@ struct GlassIconButton: View {
     var label: String
     var identifier: String? = nil
     var filled = false
+    var enabled = true
     let action: () -> Void
 
     var body: some View {
@@ -69,6 +70,8 @@ struct GlassIconButton: View {
         }
         .buttonStyle(.plain)
         .modifier(GlassOrFill(filled: filled))
+        .opacity(enabled ? 1 : 0.4)
+        .disabled(!enabled)
         .accessibilityLabel(label)
         .accessibilityIdentifier(identifier ?? label)
     }

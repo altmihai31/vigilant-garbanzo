@@ -17,7 +17,7 @@ struct ReaderView: View {
                         Image(systemName: "checkmark.icloud").foregroundStyle(Theme.offline)
                         Text("Offline copy saved \(savedText). No connection needed.").foregroundStyle(Theme.ink2)
                     }
-                    .font(.system(size: 13))
+                    .font(.scaled(13))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -25,15 +25,15 @@ struct ReaderView: View {
                     .padding(.bottom, 22)
 
                     Text(item.siteLabel.uppercased())
-                        .font(.system(size: 13)).tracking(0.3).foregroundStyle(Theme.ink3)
+                        .font(.scaled(13)).tracking(0.3).foregroundStyle(Theme.ink3)
                         .padding(.bottom, 8)
                     Text(item.title)
-                        .font(.system(size: 30, weight: .semibold, design: .serif))
+                        .font(.scaled(30, weight: .semibold, design: .serif))
                         .foregroundStyle(Theme.readerInk)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.bottom, 8)
                     Text("\(item.article?.readingMinutes ?? 1) min read")
-                        .font(.system(size: 13.5)).foregroundStyle(Theme.ink2)
+                        .font(.scaled(13.5)).foregroundStyle(Theme.ink2)
                         .padding(.bottom, 22)
 
                     if let image = model.image(for: item) {
@@ -47,7 +47,7 @@ struct ReaderView: View {
 
                     ForEach(Array((item.article?.paragraphs ?? []).enumerated()), id: \.offset) { pair in
                         Text(pair.element)
-                            .font(.system(size: textSize, design: .serif))
+                            .font(.scaled(textSize, design: .serif))
                             .lineSpacing(textSize * 0.5)
                             .foregroundStyle(Theme.readerInk)
                             .fixedSize(horizontal: false, vertical: true)
@@ -69,7 +69,7 @@ struct ReaderView: View {
                 Button {
                     textSize = textSize >= 23 ? 17 : textSize + 2
                 } label: {
-                    Text("Aa").font(.system(size: 17, weight: .bold, design: .serif)).foregroundStyle(.white)
+                    Text("Aa").font(.scaled(17, weight: .bold, design: .serif)).foregroundStyle(.white)
                         .frame(width: 46, height: 46)
                         .glass(in: Circle())
                 }

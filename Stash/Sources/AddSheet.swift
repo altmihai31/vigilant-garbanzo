@@ -63,17 +63,17 @@ struct AddSheet: View {
             GlassIconButton(systemImage: "xmark", size: 44, iconSize: 16, label: "Cancel", identifier: "cancelAdd") { dismiss() }
             Spacer()
             Text(editing != nil ? "Edit Note" : (kind == .link ? "New Link" : "New Note"))
-                .font(.system(size: 17, weight: .semibold))
+                .font(.scaled(17, weight: .semibold))
                 .accessibilityIdentifier("sheetTitle")
             Spacer()
-            GlassIconButton(systemImage: "checkmark", size: 44, iconSize: 17, label: "Save", identifier: "saveButton", filled: true) { save() }
+            GlassIconButton(systemImage: "checkmark", size: 44, iconSize: 17, label: "Save", identifier: "saveButton", filled: true, enabled: canSave) { save() }
         }
         .padding(.horizontal, 16)
         .padding(.top, 14)
         .padding(.bottom, 4)
         .overlay(alignment: .bottom) {
             if let hint {
-                Text(hint).font(.system(size: 13, weight: .semibold))
+                Text(hint).font(.scaled(13, weight: .semibold))
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Color(hex: "#3A3A3C"), in: Capsule())
                     .offset(y: 30)
@@ -90,7 +90,7 @@ struct AddSheet: View {
                     withAnimation(.spring(duration: 0.3)) { kind = k }
                 } label: {
                     Text(k.rawValue)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.scaled(15, weight: .semibold))
                         .foregroundStyle(kind == k ? Theme.ink : Theme.ink2)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
@@ -131,7 +131,7 @@ struct AddSheet: View {
                 .tint(Color.white.opacity(0.14))
                 .controlSize(.small)
             }
-            .font(.system(size: 16))
+            .font(.scaled(16))
             .padding(.leading, 14)
             .padding(.trailing, 6)
             .padding(.vertical, 6)
@@ -140,24 +140,26 @@ struct AddSheet: View {
 
             previewCard
 
-            Text("YOUR NOTE").font(.system(size: 13)).tracking(0.3).foregroundStyle(Theme.ink3).padding(.horizontal, 4).padding(.bottom, -8)
+            Text("YOUR NOTE").font(.scaled(13)).tracking(0.3).foregroundStyle(Theme.ink3).padding(.horizontal, 4).padding(.bottom, -8)
             TextField("", text: $linkNote, prompt: Text("Why are you saving this?").foregroundStyle(Theme.ink3), axis: .vertical)
                 .lineLimit(3...6)
-                .font(.system(size: 16))
+                .font(.scaled(16))
                 .focused($focus, equals: .linkNote)
                 .padding(14)
                 .background(Theme.field, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .accessibilityIdentifier("linkNoteField")
 
             HStack(spacing: 12) {
-                Image(systemName: "square.and.arrow.up").font(.system(size: 20)).foregroundStyle(Theme.accent)
+                Image(systemName: "square.and.arrow.up").font(.scaled(20)).foregroundStyle(Theme.accent)
                 Text("Faster: tap Share in Safari or YouTube and pick Stash.")
-                    .font(.system(size: 14))
+                    .font(.scaled(14))
                     .foregroundStyle(Color(hex: "#CFE0FF"))
                 Spacer(minLength: 4)
                 Button("Show me") { showHowTo = true }
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.scaled(14, weight: .semibold))
                     .foregroundStyle(Theme.accent)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                     .accessibilityIdentifier("showMe")
             }
             .padding(.horizontal, 14)
@@ -176,13 +178,13 @@ struct AddSheet: View {
                 ProgressView().tint(Theme.ink2)
                 Text("Fetching preview\u{2026}").foregroundStyle(Theme.ink3)
             }
-            .font(.system(size: 14))
+            .font(.scaled(14))
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         case .failed:
             Text("Couldn\u{2019}t load a preview. You can still save the link; Stash will try again later.")
-                .font(.system(size: 14)).foregroundStyle(Theme.ink2)
+                .font(.scaled(14)).foregroundStyle(Theme.ink2)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -197,13 +199,13 @@ struct AddSheet: View {
                     HStack(spacing: 6) {
                         let host = p.link.url.host?.replacingOccurrences(of: "www.", with: "") ?? ""
                         SiteBadge(host: host)
-                        Text(host).font(.system(size: 12.5)).foregroundStyle(Theme.ink3)
+                        Text(host).font(.scaled(12.5)).foregroundStyle(Theme.ink3)
                     }
                     .padding(.bottom, 2)
-                    Text(p.link.title).font(.system(size: 17, weight: .bold)).tracking(-0.2)
+                    Text(p.link.title).font(.scaled(17, weight: .bold)).tracking(-0.2)
                     if let s = p.link.summary {
                         SummaryLabel().padding(.top, 4)
-                        Text(s).font(.system(size: 14)).foregroundStyle(Theme.ink2)
+                        Text(s).font(.scaled(14)).foregroundStyle(Theme.ink2)
                     }
                     if p.link.collection != .none {
                         CollectionPill(collection: p.link.collection, auto: true).padding(.top, 8)
@@ -244,7 +246,7 @@ struct AddSheet: View {
     private var noteForm: some View {
         VStack(alignment: .leading, spacing: 16) {
             TextField("", text: $noteTitle, prompt: Text("Title").foregroundStyle(Theme.ink3))
-                .font(.system(size: 18, weight: .semibold))
+                .font(.scaled(18, weight: .semibold))
                 .focused($focus, equals: .title)
                 .padding(14)
                 .background(Theme.field, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -252,22 +254,24 @@ struct AddSheet: View {
 
             TextField("", text: $noteBody, prompt: Text("Start writing\u{2026}").foregroundStyle(Theme.ink3), axis: .vertical)
                 .lineLimit(4...20)
-                .font(.system(size: 16))
+                .font(.scaled(16))
                 .focused($focus, equals: .body)
                 .padding(14)
                 .background(Theme.field, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .accessibilityIdentifier("noteBodyField")
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("CHECKLIST").font(.system(size: 13)).tracking(0.3).foregroundStyle(Theme.ink3).padding(.horizontal, 4)
+                Text("CHECKLIST").font(.scaled(13)).tracking(0.3).foregroundStyle(Theme.ink3).padding(.horizontal, 4)
                 ForEach($checklist) { $entry in
                     HStack(spacing: 10) {
                         Button {
                             entry.done.toggle()
                         } label: {
                             Image(systemName: entry.done ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 20))
+                                .font(.scaled(20))
                                 .foregroundStyle(entry.done ? Theme.ink3 : Theme.ink2)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         TextField("Item", text: $entry.text)
@@ -279,17 +283,19 @@ struct AddSheet: View {
                             checklist.removeAll { $0.id == entry.id }
                         } label: {
                             Image(systemName: "minus.circle").foregroundStyle(Theme.ink3)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Remove item")
                     }
-                    .font(.system(size: 16))
+                    .font(.scaled(16))
                 }
                 Button {
                     addChecklistItem()
                 } label: {
                     Label("Add checklist item", systemImage: "plus.circle.fill")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.scaled(15, weight: .semibold))
                         .foregroundStyle(Theme.accent)
                 }
                 .buttonStyle(.plain)
@@ -307,6 +313,14 @@ struct AddSheet: View {
     }
 
     // MARK: Save
+
+    /// Save stays dimmed until there is something to save (HIG: disable rather than fail).
+    private var canSave: Bool {
+        if kind == .link { return model.normalizedURL(urlText) != nil }
+        return !noteTitle.trimmingCharacters(in: .whitespaces).isEmpty
+            || !noteBody.trimmingCharacters(in: .whitespaces).isEmpty
+            || checklist.contains { !$0.text.trimmingCharacters(in: .whitespaces).isEmpty }
+    }
 
     private func save() {
         if kind == .link {

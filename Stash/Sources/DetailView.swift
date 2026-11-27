@@ -13,6 +13,8 @@ struct DetailView: View {
     @State private var addingTag = false
     @State private var tagDraft = ""
     @State private var editingItem = false
+    @State private var confirmingDelete = false
+    @State private var markedReadHere = false
     @FocusState private var noteFocused: Bool
 
     var body: some View {
@@ -27,8 +29,12 @@ struct DetailView: View {
                     .ignoresSafeArea(edges: .top)
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("detailView")
-                    LinearGradient(colors: [.black.opacity(0.75), .black.opacity(0)], startPoint: .top, endPoint: .bottom)
-                        .frame(height: geo.safeAreaInsets.top + 72)
+                    // Keeps the bar's buttons legible over scrolled text (HIG: content under bars stays readable).
+                    LinearGradient(stops: [.init(color: .black.opacity(0.92), location: 0),
+                                           .init(color: .black.opacity(0.8), location: 0.55),
+                                           .init(color: .black.opacity(0), location: 1)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .frame(height: geo.safeAreaInsets.top + 92)
                         .ignoresSafeArea(edges: .top)
                         .allowsHitTesting(false)
                     topBar(item)
@@ -42,6 +48,15 @@ struct DetailView: View {
         }
         .sheet(isPresented: $editingItem) {
             if let item = model.item(itemID) { AddSheet(editing: item) }
+        }
+        .confirmationDialog("Delete this item?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                dismiss()
+                model.delete(itemID)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("It will be removed from Stash, along with its saved copy.")
         }
         .alert("Add tag", isPresented: $addingTag) {
             TextField("Tag", text: $tagDraft)
@@ -62,7 +77,7 @@ struct DetailView: View {
             HStack(spacing: 10) {
                 if let url = item.url {
                     ShareLink(item: url) {
-                        Image(systemName: "square.and.arrow.up").font(.system(size: 19, weight: .semibold)).foregroundStyle(.white)
+                        Image(systemName: "square.and.arrow.up").font(.scaled(19, weight: .semibold)).foregroundStyle(.white)
                             .frame(width: 52, height: 52)
                             .glass(in: Circle())
                     }
@@ -73,7 +88,7 @@ struct DetailView: View {
                         Button { editingItem = true } label: { Label("Edit note", systemImage: "pencil") }
                     } else {
                         if item.isUnread {
-                            Button { model.markRead(itemID) } label: { Label("Mark as read", systemImage: "checkmark.circle") }
+                            Button { markedReadHere = true; model.markRead(itemID) } label: { Label("Mark as read", systemImage: "checkmark.circle") }
                         } else {
                             Button { model.markUnread(itemID) } label: { Label("Mark unread", systemImage: "circle.fill") }
                         }
@@ -86,11 +101,10 @@ struct DetailView: View {
                     } label: { Label("Move to collection", systemImage: "folder") }
                     Divider()
                     Button(role: .destructive) {
-                        dismiss()
-                        model.delete(itemID)
+                        confirmingDelete = true
                     } label: { Label("Delete", systemImage: "trash") }
                 } label: {
-                    Image(systemName: "ellipsis").font(.system(size: 19, weight: .bold)).foregroundStyle(.white)
+                    Image(systemName: "ellipsis").font(.scaled(19, weight: .bold)).foregroundStyle(.white)
                         .frame(width: 52, height: 52)
                         .glass(in: Circle())
                 }
@@ -139,12 +153,12 @@ struct DetailView: View {
                 Text("\(item.siteLabel) \u{00B7} \(DateText.saved(item.createdAt))")
                     .lineLimit(1)
             }
-            .font(.system(size: 14))
+            .font(.scaled(14))
             .foregroundStyle(Theme.ink2)
             .padding(.bottom, 12)
 
             Text(item.title)
-                .font(.system(size: 30, weight: .heavy))
+                .font(.scaled(30, weight: .heavy))
                 .tracking(-0.6)
                 .foregroundStyle(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
@@ -157,7 +171,7 @@ struct DetailView: View {
             } else if let summary = item.summary {
                 SummaryLabel().padding(.bottom, 6)
                 Text(summary)
-                    .font(.system(size: 17))
+                    .font(.scaled(17))
                     .lineSpacing(3)
                     .foregroundStyle(Color(hex: "#E5E5EA"))
                     .fixedSize(horizontal: false, vertical: true)
@@ -202,14 +216,14 @@ struct DetailView: View {
                             .foregroundStyle(Theme.ink2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    .font(.system(size: 13.5))
+                    .font(.scaled(13.5))
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("offlineCopy")
                 }
             } else if item.processingState == .failed {
                 section("Offline copy") {
                     Text("Stash could not fetch this page. It will try again next time you open the app.")
-                        .font(.system(size: 13.5)).foregroundStyle(Theme.ink2)
+                        .font(.scaled(13.5)).foregroundStyle(Theme.ink2)
                 }
             }
 
@@ -223,12 +237,12 @@ struct DetailView: View {
                 Image(systemName: "text.alignleft")
                 Text("Note \u{00B7} \(DateText.dateLine(for: item.createdAt))")
             }
-            .font(.system(size: 14))
+            .font(.scaled(14))
             .foregroundStyle(Theme.ink2)
             .padding(.bottom, 12)
 
             Text(item.title)
-                .font(.system(size: 30, weight: .heavy))
+                .font(.scaled(30, weight: .heavy))
                 .tracking(-0.6)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 12)
@@ -236,7 +250,7 @@ struct DetailView: View {
 
             if let body = item.body {
                 Text(body)
-                    .font(.system(size: 17))
+                    .font(.scaled(17))
                     .lineSpacing(3)
                     .foregroundStyle(Color(hex: "#E5E5EA"))
                     .fixedSize(horizontal: false, vertical: true)
@@ -267,7 +281,7 @@ struct DetailView: View {
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title.uppercased())
-                .font(.system(size: 13, weight: .semibold))
+                .font(.scaled(13, weight: .semibold))
                 .tracking(0.4)
                 .foregroundStyle(Theme.ink3)
             content()
@@ -284,7 +298,7 @@ struct DetailView: View {
             Text(title)
             if trailingIcon { Image(systemName: systemImage) }
         }
-        .font(.system(size: 15, weight: .semibold))
+        .font(.scaled(15, weight: .semibold))
         .foregroundStyle(white ? Color.black : Theme.ink)
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
@@ -296,26 +310,29 @@ struct DetailView: View {
         let selected = ReminderPreset.matching(item.remindAt)
         let status: String = {
             if let r = item.remindAt, item.hasUpcomingReminder() { return "Reminder: " + DateText.reminder(r) }
-            return item.isUnread ? "In your Read later list" : "You read this"
+            if item.isUnread { return "In your Read later list" }
+            return markedReadHere ? "You read this" : "Pick a time to be reminded"
         }()
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 Image(systemName: "bell.fill")
-                    .font(.system(size: 15))
+                    .font(.scaled(15))
                     .foregroundStyle(Theme.reminder)
                     .frame(width: 34, height: 34)
                     .background(Theme.reminder.opacity(0.16), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(item.isUnread ? "Unread" : "Read").font(.system(size: 15.5, weight: .semibold))
-                    Text(status).font(.system(size: 13)).foregroundStyle(Theme.ink2)
+                    Text(item.isUnread ? "Unread" : (markedReadHere ? "Read" : "Read later")).font(.scaled(15.5, weight: .semibold))
+                    Text(status).font(.scaled(13)).foregroundStyle(Theme.ink2)
                         .accessibilityIdentifier("readLaterStatus")
                 }
                 Spacer()
-                Button(item.isUnread ? "Mark as read" : "Mark unread") {
-                    if item.isUnread { model.markRead(itemID) } else { model.markUnread(itemID) }
+                Button(item.isUnread ? "Mark as read" : (markedReadHere ? "Mark unread" : "Add")) {
+                    if item.isUnread { markedReadHere = true; model.markRead(itemID) } else { model.markUnread(itemID) }
                 }
-                .font(.system(size: 13, weight: .semibold))
+                .font(.scaled(13, weight: .semibold))
                 .foregroundStyle(Theme.accent)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .accessibilityIdentifier(item.isUnread ? "markRead" : "markUnread")
             }
             HStack(spacing: 8) {
@@ -356,9 +373,9 @@ struct DetailView: View {
 
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(place.name).font(.system(size: 16, weight: .semibold))
+                Text(place.name).font(.scaled(16, weight: .semibold))
                 if let a = place.address ?? place.city {
-                    Text(a).font(.system(size: 13.5)).foregroundStyle(Theme.ink2)
+                    Text(a).font(.scaled(13.5)).foregroundStyle(Theme.ink2)
                 }
             }
             Spacer()
@@ -369,7 +386,7 @@ struct DetailView: View {
                     Image(systemName: "mappin")
                     Text("Open in Maps")
                 }
-                .font(.system(size: 14, weight: .semibold))
+                .font(.scaled(14, weight: .semibold))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(.white.opacity(0.1), in: Capsule())
@@ -380,7 +397,7 @@ struct DetailView: View {
         }
         .padding(.top, 2)
         if item.collection == .places {
-            Text("Found in the article, so Stash put this in Places.").font(.system(size: 12.5)).foregroundStyle(Theme.ink3)
+            Text("Found in the article, so Stash put this in Places.").font(.scaled(12.5)).foregroundStyle(Theme.ink3)
         }
     }
 
@@ -389,7 +406,7 @@ struct DetailView: View {
         if editingNote {
             VStack(alignment: .trailing, spacing: 8) {
                 TextField("Why are you saving this?", text: $noteDraft, axis: .vertical)
-                    .font(.system(size: 16))
+                    .font(.scaled(16))
                     .lineLimit(2...8)
                     .padding(12)
                     .background(Theme.field, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -400,7 +417,7 @@ struct DetailView: View {
                     model.update(itemID) { $0.note = text.isEmpty ? nil : text }
                     editingNote = false
                 }
-                .font(.system(size: 15, weight: .semibold))
+                .font(.scaled(15, weight: .semibold))
                 .accessibilityIdentifier("noteDone")
             }
         } else {
@@ -410,7 +427,7 @@ struct DetailView: View {
                 noteFocused = true
             } label: {
                 Text(item.note ?? "Add a note to remember why you saved this.")
-                    .font(.system(size: 16))
+                    .font(.scaled(16))
                     .lineSpacing(3)
                     .foregroundStyle(item.note == nil ? Theme.ink3 : Theme.ink2)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -458,20 +475,22 @@ struct DetailView: View {
             }
             if item.collection != .none {
                 Text(item.collectionIsManual ? "You picked this collection." : "Sorted automatically from what \(item.kind == .note ? "the note" : "the page") is about.")
-                    .font(.system(size: 12.5)).foregroundStyle(Theme.ink3)
+                    .font(.scaled(12.5)).foregroundStyle(Theme.ink3)
             }
         }
     }
 
     private func tagView(_ text: String, systemImage: String? = nil) -> some View {
         HStack(spacing: 5) {
-            if let systemImage { Image(systemName: systemImage).font(.system(size: 11, weight: .bold)) }
+            if let systemImage { Image(systemName: systemImage).font(.scaled(11, weight: .bold)) }
             Text(text)
         }
-        .font(.system(size: 13))
+        .font(.scaled(13))
         .padding(.horizontal, 11)
         .padding(.vertical, 6)
         .background(Theme.field, in: Capsule())
         .foregroundStyle(Color(hex: "#D1D1D6"))
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 }

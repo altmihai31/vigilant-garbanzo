@@ -21,7 +21,7 @@ struct ShareCardView: View {
                 Spacer()
                 HStack(spacing: 8) {
                     AppGlyph(size: 22)
-                    Text("Save to Stash").font(.system(size: 16, weight: .semibold))
+                    Text("Save to Stash").font(.scaled(16, weight: .semibold))
                 }
                 Spacer()
                 GlassIconButton(systemImage: "checkmark", size: 40, iconSize: 16, label: "Save", identifier: "shareSave", filled: true, action: onSave)
@@ -34,7 +34,7 @@ struct ShareCardView: View {
                     } else {
                         ZStack {
                             Theme.field
-                            Image(systemName: "link").font(.system(size: 24, weight: .semibold)).foregroundStyle(Theme.ink3)
+                            Image(systemName: "link").font(.scaled(24, weight: .semibold)).foregroundStyle(Theme.ink3)
                         }
                     }
                 }
@@ -42,17 +42,17 @@ struct ShareCardView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title).font(.system(size: 15.5, weight: .semibold)).lineLimit(3)
+                    Text(title).font(.scaled(15.5, weight: .semibold)).lineLimit(3)
                     if loading {
                         SummaryLabel(text: "Summarizing\u{2026}")
                         ShimmerLines()
                     } else if let summary, !summary.isEmpty {
                         SummaryLabel()
-                        Text(summary).font(.system(size: 13.5)).foregroundStyle(Theme.ink2).lineLimit(4)
+                        Text(summary).font(.scaled(13.5)).foregroundStyle(Theme.ink2).lineLimit(4)
                     } else {
                         HStack(spacing: 6) {
                             SiteBadge(host: host)
-                            Text(host).font(.system(size: 13)).foregroundStyle(Theme.ink3)
+                            Text(host).font(.scaled(13)).foregroundStyle(Theme.ink3)
                         }
                     }
                 }
@@ -70,7 +70,7 @@ struct ShareCardView: View {
                     Text(loading ? "Sorting\u{2026}" : "Sorted after saving").foregroundStyle(Theme.ink3)
                 }
             }
-            .font(.system(size: 13.5))
+            .font(.scaled(13.5))
             .foregroundStyle(Theme.ink2)
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -83,14 +83,14 @@ struct ShareCardView: View {
                     }
                 }
             }
-            .font(.system(size: 13.5))
+            .font(.scaled(13.5))
             .foregroundStyle(Theme.ink2)
 
             HStack(spacing: 10) {
                 Image(systemName: "checkmark.icloud").foregroundStyle(Theme.offline)
                 Text("An offline copy of the article will be saved too.").foregroundStyle(Theme.ink2)
             }
-            .font(.system(size: 13.5))
+            .font(.scaled(13.5))
         }
         .padding(14)
         .foregroundStyle(Theme.ink)
@@ -102,11 +102,11 @@ struct ShareCardView: View {
                     RoundedRectangle(cornerRadius: 34, style: .continuous).fill(Color(hex: "#242426"))
                     VStack(spacing: 10) {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.scaled(28, weight: .bold))
                             .foregroundStyle(.white)
                             .frame(width: 62, height: 62)
                             .background(Theme.offline, in: Circle())
-                        Text("Saved to Stash").font(.system(size: 16, weight: .semibold))
+                        Text("Saved to Stash").font(.scaled(16, weight: .semibold))
                     }
                 }
                 .transition(.opacity)

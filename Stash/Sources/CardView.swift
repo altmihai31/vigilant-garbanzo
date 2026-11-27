@@ -26,17 +26,17 @@ struct CardView: View {
                         .accessibilityLabel("Unread")
                 }
                 Text(DateText.dateLine(for: item.createdAt))
-                    .font(.system(size: 15))
+                    .font(.scaled(15))
                     .foregroundStyle(Theme.ink.opacity(0.92))
                 if item.hasUpcomingReminder() {
-                    Image(systemName: "bell.fill").font(.system(size: 12)).foregroundStyle(Theme.reminder)
+                    Image(systemName: "bell.fill").font(.scaled(12)).foregroundStyle(Theme.reminder)
                         .accessibilityLabel("Reminder set")
                 }
             }
             .padding(.trailing, image == nil ? 26 : 0)
 
             Text(item.title)
-                .font(.system(size: 21, weight: .heavy))
+                .font(.scaled(21, weight: .heavy))
                 .tracking(-0.35)
                 .lineSpacing(-1)
                 .foregroundStyle(Theme.ink)
@@ -51,19 +51,19 @@ struct CardView: View {
                     }
                     .padding(.top, 6)
                 } else if let body = item.body {
-                    Text(body).font(.system(size: 15)).foregroundStyle(Theme.ink2).lineLimit(6).padding(.top, 4)
+                    Text(body).font(.scaled(15)).foregroundStyle(Theme.ink2).lineLimit(6).padding(.top, 4)
                 }
             } else if item.processingState == .pending && item.summary == nil {
                 ShimmerLines().padding(.top, 6)
             } else if let s = item.summary {
-                Text(s).font(.system(size: 15)).foregroundStyle(Theme.ink2).lineLimit(6).padding(.top, 4)
+                Text(s).font(.scaled(15)).foregroundStyle(Theme.ink2).lineLimit(6).padding(.top, 4)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             if let city = item.place?.city ?? item.place?.name {
                 HStack(spacing: 5) {
-                    Image(systemName: "mappin").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.pin)
-                    Text(city).font(.system(size: 13)).foregroundStyle(Theme.ink2).lineLimit(1)
+                    Image(systemName: "mappin").font(.scaled(11, weight: .bold)).foregroundStyle(Theme.pin)
+                    Text(city).font(.scaled(13)).foregroundStyle(Theme.ink2).lineLimit(1)
                 }
                 .padding(.top, 6)
             }
@@ -71,7 +71,7 @@ struct CardView: View {
             if item.kind == .link {
                 HStack(spacing: 6) {
                     SiteBadge(host: item.siteLabel)
-                    Text(item.siteLabel).font(.system(size: 12.5)).foregroundStyle(Theme.ink3).lineLimit(1).truncationMode(.tail)
+                    Text(item.siteLabel).font(.scaled(12.5)).foregroundStyle(Theme.ink3).lineLimit(1).truncationMode(.tail)
                 }
                 .padding(.top, 8)
             }
@@ -88,7 +88,7 @@ struct CardView: View {
 
     private func kindIcon(onImage: Bool) -> some View {
         Image(systemName: item.kind == .note ? "text.alignleft" : (item.collection == .none ? "link" : item.collection.symbol))
-            .font(.system(size: 10, weight: .bold))
+            .font(.scaled(10, weight: .bold))
             .foregroundStyle(onImage ? .white : Theme.ink2)
             .frame(width: 22, height: 22)
             .background(onImage ? AnyShapeStyle(Color.black.opacity(0.45)) : AnyShapeStyle(Color.white.opacity(0.07)), in: Circle())
@@ -110,7 +110,7 @@ struct ChecklistRow: View {
                 .frame(width: size, height: size)
                 .alignmentGuide(.firstTextBaseline) { d in d[VerticalAlignment.center] + font * 0.35 }
             Text(entry.text)
-                .font(.system(size: font))
+                .font(.scaled(font))
                 .strikethrough(entry.done)
                 .foregroundStyle(entry.done ? Theme.ink3 : Theme.ink2)
         }

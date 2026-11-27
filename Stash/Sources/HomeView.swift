@@ -83,8 +83,8 @@ struct HomeView: View {
     private var emptyState: some View {
         VStack(spacing: 10) {
             if model.search.isEmpty {
-                Image(systemName: "square.grid.2x2").font(.system(size: 34)).foregroundStyle(Theme.ink3)
-                Text("Nothing saved yet").font(.system(size: 20, weight: .bold))
+                Image(systemName: "square.grid.2x2").font(.scaled(34)).foregroundStyle(Theme.ink3)
+                Text("Nothing saved yet").font(.scaled(20, weight: .bold))
                 Text("Tap + to paste a link or write a note. From Safari or YouTube, tap Share and pick Stash.")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.ink2)
@@ -93,7 +93,7 @@ struct HomeView: View {
                     .foregroundStyle(Theme.ink3)
             }
         }
-        .font(.system(size: 15))
+        .font(.scaled(15))
         .padding(.horizontal, 30)
         .padding(.top, 140)
         .frame(maxWidth: .infinity)
@@ -108,9 +108,9 @@ struct HomeView: View {
         Group {
             if searching {
                 HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").font(.system(size: 18, weight: .semibold)).foregroundStyle(.white.opacity(0.7))
+                    Image(systemName: "magnifyingglass").font(.scaled(18, weight: .semibold)).foregroundStyle(.white.opacity(0.7))
                     TextField("", text: $model.search, prompt: Text("Search links, notes and saved text").foregroundStyle(.white.opacity(0.55)))
-                        .font(.system(size: 17))
+                        .font(.scaled(17))
                         .focused($searchFocused)
                         .submitLabel(.search)
                         .autocorrectionDisabled()
@@ -121,7 +121,7 @@ struct HomeView: View {
                         searchFocused = false
                         withAnimation(.spring(duration: 0.35)) { searching = false }
                     } label: {
-                        Image(systemName: "xmark").font(.system(size: 15, weight: .bold))
+                        Image(systemName: "xmark").font(.scaled(15, weight: .bold))
                             .frame(width: 42, height: 42)
                             .background(.white.opacity(0.12), in: Circle())
                     }
@@ -161,20 +161,21 @@ struct CollectionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(model.filter.title)
-                .font(.system(size: 30, weight: .heavy))
+                .font(.scaled(30, weight: .heavy))
                 .tracking(-0.6)
                 .foregroundStyle(Theme.ink)
                 .accessibilityIdentifier("collectionTitle")
-            Text(subtitle).font(.system(size: 13)).foregroundStyle(Theme.ink2)
+            Text(subtitle).font(.scaled(13)).foregroundStyle(Theme.ink2)
             Button("Show all") {
                 withAnimation { model.filter = .all }
             }
-            .font(.system(size: 13, weight: .semibold))
+            .font(.scaled(13, weight: .semibold))
             .foregroundStyle(Theme.ink)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(.white.opacity(0.1), in: Capsule())
-            .padding(.top, 6)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
             .accessibilityIdentifier("showAll")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -215,14 +216,14 @@ struct FilterMenuButton: View {
             }
         } label: {
             Image(systemName: "line.3.horizontal.decrease")
-                .font(.system(size: 21, weight: .semibold))
+                .font(.scaled(21, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 58, height: 58)
                 .glass(in: Circle())
                 .overlay(alignment: .topTrailing) {
                     if model.unreadCount > 0 {
                         Text("\(model.unreadCount)")
-                            .font(.system(size: 12.5, weight: .bold).monospacedDigit())
+                            .font(.scaled(12.5, weight: .bold).monospacedDigit())
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .frame(minWidth: 22, minHeight: 22)
@@ -260,7 +261,7 @@ struct ToastView: View {
     var body: some View {
         if let text = model.toastText {
             Text(text)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.scaled(14, weight: .semibold))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .background(Color(hex: "#3A3A3C").opacity(0.85), in: Capsule())

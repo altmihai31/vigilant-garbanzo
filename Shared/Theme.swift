@@ -24,7 +24,7 @@ enum Theme {
     static let reader = Color(hex: "#151516")
     static let ink = Color(hex: "#F5F5F7")
     static let ink2 = Color(hex: "#A1A1A6")
-    static let ink3 = Color(hex: "#6E6E73")
+    static let ink3 = Color(hex: "#8E8E93")  // 5.0:1 on the card colour
     static let accent = Color(hex: "#5EA2FF")
     static let reminder = Color(hex: "#FF9F0A")
     static let summary = Color(hex: "#BF9BFF")
@@ -61,7 +61,7 @@ struct SummaryLabel: View {
     var text = "Summary from the page"
     var body: some View {
         Label(text, systemImage: "sparkle")
-            .font(.system(size: 12.5, weight: .semibold))
+            .font(.scaled(12.5, weight: .semibold))
             .foregroundStyle(Theme.summary)
             .labelStyle(TightLabelStyle(spacing: 5))
     }
@@ -81,6 +81,7 @@ struct TightLabelStyle: LabelStyle {
 struct ShimmerLines: View {
     var lines = 2
     @State private var phase: CGFloat = -1
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -93,6 +94,8 @@ struct ShimmerLines: View {
             }
         }
         .onAppear {
+            // Reduce Motion: keep the placeholder still instead of sweeping.
+            guard !reduceMotion else { phase = 0; return }
             withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) { phase = 1 }
         }
         .accessibilityLabel("Summarizing")
@@ -106,10 +109,10 @@ struct CollectionPill: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: collection.symbol).font(.system(size: 12, weight: .semibold))
-            Text(collection.name).font(.system(size: 14, weight: .semibold))
+            Image(systemName: collection.symbol).font(.scaled(12, weight: .semibold))
+            Text(collection.name).font(.scaled(14, weight: .semibold))
             if auto {
-                Text("AUTO").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.summary)
+                Text("AUTO").font(.scaled(10, weight: .bold)).foregroundStyle(Theme.summary)
             }
         }
         .padding(.vertical, 7)
@@ -130,11 +133,14 @@ struct ChipButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 13.5, weight: .medium))
+                .font(.scaled(13.5, weight: .medium))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
                 .background(selected ? selectedFill : Theme.field, in: Capsule())
                 .foregroundStyle(selected ? Color.black : Theme.ink2)
+                // 44 pt tap target (HIG) without changing the drawn chip.
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -175,5 +181,14 @@ struct FlowLayout: Layout {
             x += size.width + spacing
             rowH = max(rowH, size.height)
         }
+    }
+}
+
+extension Font {
+    /// A system font at the design size that grows and shrinks with the person's Dynamic Type setting
+    /// (scaled like Body, capped so the two-column grid stays usable).
+    static func scaled(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        let s = UIFontMetrics(forTextStyle: .body).scaledValue(for: size)
+        return .system(size: min(s, size * 1.8), weight: weight, design: design)
     }
 }
