@@ -1,4 +1,4 @@
-# Stash screenshots (claude-project-thread-onjzx1, 30bbc2a)
+# Stash screenshots (claude-project-thread-onjzx1, 460772f)
 
 ## 01-home
 
