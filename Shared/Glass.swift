@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Liquid Glass on iOS 26 (`glassEffect`), a material fallback on older systems.
-struct GlassBackground<S: Shape>: ViewModifier {
+struct GlassBackground<S: InsettableShape>: ViewModifier {
     let shape: S
     var tint: Color? = nil
     var interactive = true
@@ -44,7 +44,7 @@ struct GlassBackground<S: Shape>: ViewModifier {
 }
 
 extension View {
-    func glass<S: Shape>(in shape: S, tint: Color? = nil, interactive: Bool = true) -> some View {
+    func glass<S: InsettableShape>(in shape: S, tint: Color? = nil, interactive: Bool = true) -> some View {
         modifier(GlassBackground(shape: shape, tint: tint, interactive: interactive))
     }
 }
