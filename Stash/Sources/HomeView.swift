@@ -208,7 +208,7 @@ struct FilterMenuButton: View {
             }
             Section("Sort") {
                 Picker("Sort", selection: $model.sort) {
-                    ForEach(SortOrder.allCases, id: \.self) { Text($0.title).tag($0) }
+                    ForEach(ItemSortOrder.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.inline)
             }

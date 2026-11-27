@@ -12,7 +12,7 @@ struct LinkPreview {
 final class AppModel: ObservableObject {
     @Published private(set) var items: [Item] = []
     @Published var filter: ItemFilter = .all
-    @Published var sort: SortOrder = .newest
+    @Published var sort: ItemSortOrder = .newest
     @Published var search = ""
     @Published var path: [UUID] = []
     @Published var toastText: String?

@@ -24,14 +24,14 @@ public enum ItemFilter: Hashable, Sendable {
     }
 }
 
-public enum SortOrder: String, CaseIterable, Sendable {
+public enum ItemSortOrder: String, CaseIterable, Sendable {
     case newest, oldest
 
     public var title: String { self == .newest ? "Newest first" : "Oldest first" }
 }
 
 public enum ItemQuery {
-    public static func apply(_ items: [Item], filter: ItemFilter = .all, sort: SortOrder = .newest, search: String = "") -> [Item] {
+    public static func apply(_ items: [Item], filter: ItemFilter = .all, sort: ItemSortOrder = .newest, search: String = "") -> [Item] {
         let q = search.trimmingCharacters(in: .whitespacesAndNewlines)
         return items
             .filter { filter.includes($0) && (q.isEmpty || matches($0, query: q)) }
